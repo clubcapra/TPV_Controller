@@ -7,7 +7,7 @@
 #include <FeedBackServo.h>
 
 #define KP -0.2
-
+//Dave was here
 #define G_X 0.7
 #define G_Y 0.7
 
@@ -76,77 +76,86 @@ int turns2 = 0;
 
 void loop()
 {
-//Calculations of the servo angle from the timings of the input signal
 //----------------------------------------------------------------
-  int tCycle = tHigh1 + tLow1;
-  if((tCycle > 1000) && (tCycle < 1200)){
-    float dc = (dutyScale * tHigh1) / (float)tCycle;
-    float theta = (unitsFC - 1) - ((dc - dcMin) * unitsFC) / (dcMax - dcMin + 1);
-  
+  if(1){
+    int tCycle = tHigh1 + tLow1;
+    if((tCycle > 1000) && (tCycle < 1200)){
+      float dc = (dutyScale * tHigh1) / (float)tCycle;
+      float theta = (unitsFC - 1) - ((dc - dcMin) * unitsFC) / (dcMax - dcMin + 1);
     
-    if(theta < 0.0)
-        theta = 0.0;
-    else if(theta > (unitsFC - 1.0))
-        theta = unitsFC - 1.0;
-  
-    if((theta < q2min) && (thetaPre1 > q3max))
-        turns1++;
-    else if((thetaPre1 < q2min) && (theta > q3max))
-        turns1--;
-  
-    if(turns1 >= 0)
-        angle1 = (turns1 * unitsFC) + theta;
-    else if(turns1 < 0)
-        angle1 = ((turns1 + 1) * unitsFC) - (unitsFC - theta);
-  
-    thetaPre1 = theta;
+      
+      if(theta < 0.0)
+          theta = 0.0;
+      else if(theta > (unitsFC - 1.0))
+          theta = unitsFC - 1.0;
+    
+      if((theta < q2min) && (thetaPre1 > q3max))
+          turns1++;
+      else if((thetaPre1 < q2min) && (theta > q3max))
+          turns1--;
+    
+      if(turns1 >= 0)
+          angle1 = (turns1 * unitsFC) + theta;
+      else if(turns1 < 0)
+          angle1 = ((turns1 + 1) * unitsFC) - (unitsFC - theta);
+    
+      thetaPre1 = theta;
+    }
   }
-  
+
 //----------------------------------------------------------------
-  int tCycle = tHigh2 + tLow2;
-  if((tCycle > 1000) && (tCycle < 1200)){
-    float dc = (dutyScale * tHigh2) / (float)tCycle;
-    float theta = (unitsFC - 1) - ((dc - dcMin) * unitsFC) / (dcMax - dcMin + 1);
-  
+  if(1){
+    int tCycle = tHigh2 + tLow2;
+    if((tCycle > 1000) && (tCycle < 1200)){
+      float dc = (dutyScale * tHigh2) / (float)tCycle;
+      float theta = (unitsFC - 1) - ((dc - dcMin) * unitsFC) / (dcMax - dcMin + 1);
     
-    if(theta < 0.0)
-        theta = 0.0;
-    else if(theta > (unitsFC - 1.0))
-        theta = unitsFC - 1.0;
-  
-    if((theta < q2min) && (thetaPre2 > q3max))
-        turns2++;
-    else if((thetaPre2 < q2min) && (theta > q3max))
-        turns2--;
-  
-    if(turns1 >= 0)
-        angle2 = (turns2 * unitsFC) + theta;
-    else if(turns1 < 0)
-        angle2 = ((turns2 + 1) * unitsFC) - (unitsFC - theta);
-  
-    thetaPre2 = theta;
+      
+      if(theta < 0.0)
+          theta = 0.0;
+      else if(theta > (unitsFC - 1.0))
+          theta = unitsFC - 1.0;
+    
+      if((theta < q2min) && (thetaPre2 > q3max))
+          turns2++;
+      else if((thetaPre2 < q2min) && (theta > q3max))
+          turns2--;
+    
+      if(turns1 >= 0)
+          angle2 = (turns2 * unitsFC) + theta;
+      else if(turns1 < 0)
+          angle2 = ((turns2 + 1) * unitsFC) - (unitsFC - theta);
+    
+      thetaPre2 = theta;
+    }
   }
 //-------------------------------------------------------------------
 
-//Compute desired position and publish 
-  pos1 = pos1 + G_X*cmd1*(millis() - lasttime);
-  pos2 = pos2 + G_Y*cmd2*(millis() - lasttime);
 
-  servo1.write(constrain(((angle1-pos1)*KP) + 90, 0 , 180));
-  servo2.write(constrain(((angle2-pos2)*KP) + 90, 0 , 180));
+  if(millis() > 200){
+    pos1 = pos1 + G_X*cmd1*(millis() - lasttime);
+    pos2 = pos2 + G_Y*cmd2*(millis() - lasttime);
   
-  tpv_pos_x.data = angle1;
-  pub1.publish(&tpv_pos_x);
-
-  tpv_pos_y.data = angle2;
-  pub1.publish(&tpv_pos_y);
+    servo1.write(constrain(((angle1-pos1)*KP) + 90, 0 , 180));
+    servo2.write(constrain(((angle2-pos2)*KP) + 90, 0 , 180));
+    
+    tpv_pos_x.data = angle1;
+    pub1.publish(&tpv_pos_x);
   
-  lasttime = millis();
-  nh.spinOnce();
-  delay(1);
+    tpv_pos_y.data = angle2;
+    pub1.publish(&tpv_pos_y);
+    
+    lasttime = millis();
+    nh.spinOnce();
+    delay(1);
+  }
+  else{
+    pos1 = angle1;
+    pos2 = angle2;
+  }
 }
 
-// Interrupts for the 2 servo position sensor signal
+
 void interupt1(){
   if(digitalRead(2)) {
     rise1 = micros();
