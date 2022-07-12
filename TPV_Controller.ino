@@ -4,10 +4,9 @@
 #include <std_msgs/UInt16.h>
 #include <std_msgs/Float64.h>
 #include <Servo.h>
-#include <FeedBackServo.h>
 
 #define KP -0.2
-//Dave was here
+
 #define G_X 0.7
 #define G_Y 0.7
 
