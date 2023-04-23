@@ -36,16 +36,17 @@ struct fb_servo { //Feedback servo struct
   Servo servo_handle;
 };
 
-void interupt1();
-void interupt2();
 void messageServo1(const std_msgs::Float64& toggle_msg);
 void messageServo2(const std_msgs::Float64& toggle_msg);
 void messageDop1(const std_msgs::UInt16& toggle_msg);
 void messageDop2(const std_msgs::UInt16& toggle_msg);
 void messageDop3(const std_msgs::UInt16& toggle_msg);
 void messageDop4(const std_msgs::UInt16& toggle_msg);
+
 void fb_servo_update(fb_servo fb_servo_handle);
 void fb_servo_calc_angle(fb_servo servo);
+void interupt1();
+void interupt2();
 
 fb_servo servo1;
 fb_servo servo2;
@@ -63,6 +64,7 @@ ros::Subscriber<std_msgs::UInt16> sub3("DOP1", &messageDop1);
 ros::Subscriber<std_msgs::UInt16> sub4("DOP2", &messageDop2);
 ros::Subscriber<std_msgs::UInt16> sub5("DOP3", &messageDop3);
 ros::Subscriber<std_msgs::UInt16> sub6("DOP4", &messageDop4);
+
 ros::Publisher pub1("tpv_pos_x", &tpv_pos_x);
 ros::Publisher pub2("tpv_pos_y", &tpv_pos_y);
 ros::Publisher pub3("vbus1", &vbus1);
@@ -80,12 +82,14 @@ void setup()
 
   nh.getHardware()->setBaud(57600);
   nh.initNode();
+
   nh.subscribe(sub1);
   nh.subscribe(sub2);
   nh.subscribe(sub3);
   nh.subscribe(sub4);
   nh.subscribe(sub5);
   nh.subscribe(sub6);
+
   nh.advertise(pub1);
   nh.advertise(pub2);
   nh.advertise(pub3);
