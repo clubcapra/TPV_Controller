@@ -26,6 +26,9 @@ Servo servo2;
 
 long lasttime;
 
+void interupt1();
+void interupt2();
+
 void messageServo1(const std_msgs::Float64& toggle_msg){
   cmd1 = toggle_msg.data;
 }
@@ -75,7 +78,6 @@ int turns2 = 0;
 
 void loop()
 {
-//----------------------------------------------------------------
   if(1){
     int tCycle = tHigh1 + tLow1;
     if((tCycle > 1000) && (tCycle < 1200)){
@@ -156,22 +158,20 @@ void loop()
 
 
 void interupt1(){
-  if(digitalRead(2)) {
-    rise1 = micros();
-    tLow1 = rise1 - fall1;
-
-  }
-  else{
-    fall1 = micros();
-    tHigh1 = fall1 - rise1;
-  }
+    if(digitalRead(2)) {
+      rise1 = micros();
+      tLow1 = rise1 - fall1;
+    }
+    else{
+      fall1 = micros();
+      tHigh1 = fall1 - rise1;
+    }
 }
 
 void interupt2(){
   if(digitalRead(3)) {
     rise2 = micros();
     tLow2 = rise2 - fall2;
-
   }
   else{
     fall2 = micros();
