@@ -5,10 +5,18 @@
 #include <std_msgs/Float64.h>
 #include <Servo.h>
 
+#define UPDATE_RATE 60                //UPDATE RATE IN HZ
+#define UPDATE_PERIOD 1/UPDATE_RATE   //UPDATE RATE IN S
+
 #define SERVO1_CMD_PIN 5
 #define SERVO1_FB_PIN  2
 #define SERVO2_CMD_PIN 6
 #define SERVO2_FB_PIN  3
+
+#define VBUS1_PIN  A0
+#define VBUS2_PIN  A1
+
+#define VBUS_RATIO 6.23
 
 struct fb_servo { //Feedback servo struct
   int turns = 0;
@@ -37,11 +45,15 @@ ros::NodeHandle nh;
 
 std_msgs::Float64 tpv_pos_x;
 std_msgs::Float64 tpv_pos_y;
+std_msgs::Float64 vbus1;
+std_msgs::Float64 vbus2;
 
 ros::Subscriber<std_msgs::Float64> sub1("tpv_x", &messageServo1);
 ros::Subscriber<std_msgs::Float64> sub2("tpv_y", &messageServo2);
 ros::Publisher pub1("tpv_pos_x", &tpv_pos_x);
 ros::Publisher pub2("tpv_pos_y", &tpv_pos_y);
+ros::Publisher pub3("vbus1", &vbus1);
+ros::Publisher pub4("vbus2", &vbus2);
 
 void setup()
 {
@@ -54,6 +66,8 @@ void setup()
   nh.subscribe(sub2);
   nh.advertise(pub1);
   nh.advertise(pub2);
+  nh.advertise(pub3);
+  nh.advertise(pub4);
 
   attachInterrupt(digitalPinToInterrupt(SERVO1_FB_PIN), interupt1, CHANGE);
   attachInterrupt(digitalPinToInterrupt(SERVO2_FB_PIN), interupt2, CHANGE);
@@ -73,6 +87,7 @@ void setup()
 
 void loop()
 {
+    unsigned long timestamp = micros();
     fb_servo_update(servo1);
     fb_servo_update(servo2);
     
@@ -82,8 +97,16 @@ void loop()
     tpv_pos_y.data = servo1.pos;
     pub1.publish(&tpv_pos_y);
 
+    vbus1.data = analogRead(VBUS1_PIN) * VBUS_RATIO;
+    pub3.publish(&vbus1);
+
+    vbus2.data = analogRead(VBUS2_PIN) * VBUS_RATIO;
+    pub4.publish(&vbus2);
+
     nh.spinOnce();
-    delay(1);
+    while(micros()-timestamp < UPDATE_PERIOD * 1000){
+
+    }
 }
 
 
