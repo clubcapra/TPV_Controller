@@ -16,6 +16,11 @@
 #define VBUS1_PIN  A0
 #define VBUS2_PIN  A1
 
+#define DOP1_PIN  A2
+#define DOP2_PIN  A3
+#define DOP3_PIN  A4
+#define DOP4_PIN  A5
+
 #define VBUS_RATIO 6.23
 
 struct fb_servo { //Feedback servo struct
@@ -35,6 +40,10 @@ void interupt1();
 void interupt2();
 void messageServo1(const std_msgs::Float64& toggle_msg);
 void messageServo2(const std_msgs::Float64& toggle_msg);
+void messageDop1(const std_msgs::UInt16& toggle_msg);
+void messageDop2(const std_msgs::UInt16& toggle_msg);
+void messageDop3(const std_msgs::UInt16& toggle_msg);
+void messageDop4(const std_msgs::UInt16& toggle_msg);
 void fb_servo_update(fb_servo fb_servo_handle);
 void fb_servo_calc_angle(fb_servo servo);
 
@@ -50,6 +59,10 @@ std_msgs::Float64 vbus2;
 
 ros::Subscriber<std_msgs::Float64> sub1("tpv_x", &messageServo1);
 ros::Subscriber<std_msgs::Float64> sub2("tpv_y", &messageServo2);
+ros::Subscriber<std_msgs::UInt16> sub3("DOP1", &messageDop1);
+ros::Subscriber<std_msgs::UInt16> sub4("DOP2", &messageDop2);
+ros::Subscriber<std_msgs::UInt16> sub5("DOP3", &messageDop3);
+ros::Subscriber<std_msgs::UInt16> sub6("DOP4", &messageDop4);
 ros::Publisher pub1("tpv_pos_x", &tpv_pos_x);
 ros::Publisher pub2("tpv_pos_y", &tpv_pos_y);
 ros::Publisher pub3("vbus1", &vbus1);
@@ -57,6 +70,11 @@ ros::Publisher pub4("vbus2", &vbus2);
 
 void setup()
 {
+  pinMode(DOP1_PIN,OUTPUT);
+  pinMode(DOP2_PIN,OUTPUT);
+  pinMode(DOP3_PIN,OUTPUT);
+  pinMode(DOP4_PIN,OUTPUT);
+
   servo1.servo_handle.attach(SERVO1_CMD_PIN);
   servo2.servo_handle.attach(SERVO2_CMD_PIN);
 
@@ -64,6 +82,10 @@ void setup()
   nh.initNode();
   nh.subscribe(sub1);
   nh.subscribe(sub2);
+  nh.subscribe(sub3);
+  nh.subscribe(sub4);
+  nh.subscribe(sub5);
+  nh.subscribe(sub6);
   nh.advertise(pub1);
   nh.advertise(pub2);
   nh.advertise(pub3);
@@ -109,10 +131,26 @@ void loop()
     }
 }
 
+void messageDop1(const std_msgs::UInt16& toggle_msg){
+  digitalWrite(DOP1_PIN, toggle_msg.data);
+}
+
+void messageDop2(const std_msgs::UInt16& toggle_msg){
+  digitalWrite(DOP2_PIN, toggle_msg.data);
+}
+
+void messageDop3(const std_msgs::UInt16& toggle_msg){
+  digitalWrite(DOP3_PIN, toggle_msg.data);
+}
+
+void messageDop4(const std_msgs::UInt16& toggle_msg){
+  digitalWrite(DOP4_PIN, toggle_msg.data);
+}
 
 void messageServo1(const std_msgs::Float64& toggle_msg){
   servo1.rate = toggle_msg.data;
 }
+
 void messageServo2(const std_msgs::Float64& toggle_msg){
   servo2.rate = toggle_msg.data;
 }
