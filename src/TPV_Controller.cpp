@@ -30,8 +30,11 @@ struct fb_servo { //Feedback servo struct
   float rate = 0;  //velocity command
   float cmd = 0;
   float pos = 0;
-  float rate_gain = 0.7;
-  float kp_gain = 0.2;
+  float rate_gain = 4;
+  float kp_gain = 0.1;
+  float ki_gain = 0.001;
+  float i = 0;
+  float i_max = 800;
   int valid = 0;
   Servo servo_handle;
 };
@@ -95,8 +98,6 @@ void setup()
   nh.advertise(pub3);
   nh.advertise(pub4);
 
-  Serial.begin(9600);
-
   attachInterrupt(digitalPinToInterrupt(SERVO1_FB_PIN), interupt1, CHANGE);
   attachInterrupt(digitalPinToInterrupt(SERVO2_FB_PIN), interupt2, CHANGE);
 
@@ -109,7 +110,7 @@ void setup()
     servo1.cmd = servo1.pos;
   }
   if(servo2.valid){
-    servo2.cmd = servo1.pos;
+    servo2.cmd = servo2.pos;
   }
 }
 
@@ -134,8 +135,7 @@ void loop()
     pub4.publish(&vbus2);
 
     nh.spinOnce();
-    while(micros()-timestamp < UPDATE_PERIOD * 1000){
-
+    while(micros()-timestamp < UPDATE_PERIOD * 1000000){
     }
 }
 
@@ -166,8 +166,10 @@ void messageServo2(const std_msgs::Float64& toggle_msg){
 void fb_servo_update(fb_servo* fb_servo_handle){
   fb_servo_calc_angle(fb_servo_handle);
   if(fb_servo_handle->valid){
-    fb_servo_handle->cmd = fb_servo_handle->cmd + fb_servo_handle->rate_gain*fb_servo_handle->rate*(millis() - fb_servo_handle->last_command);
-    int servo_command = constrain(((fb_servo_handle->cmd-fb_servo_handle->pos)*fb_servo_handle->kp_gain) + 90, 0 , 180);
+    fb_servo_handle->cmd = fb_servo_handle->cmd + fb_servo_handle->rate_gain*fb_servo_handle->rate;
+    float error = (fb_servo_handle->cmd-fb_servo_handle->pos);
+    fb_servo_handle->i = constrain(fb_servo_handle->i + error, -fb_servo_handle->i_max , fb_servo_handle->i_max);
+    float servo_command = constrain((error*fb_servo_handle->kp_gain + fb_servo_handle->i*fb_servo_handle->ki_gain) + 90, 0 , 180);
     fb_servo_handle->servo_handle.write(servo_command);
   }
   else{
