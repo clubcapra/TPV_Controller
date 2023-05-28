@@ -3,10 +3,12 @@
 #include <std_msgs/Empty.h>
 #include <std_msgs/UInt16.h>
 #include <std_msgs/Float64.h>
+#include <sensor_msgs/JointState.h>
 #include <Servo.h>
+#include <math.h>
 
-#define UPDATE_RATE 60                //UPDATE RATE IN HZ
-#define UPDATE_PERIOD 1/UPDATE_RATE   //UPDATE RATE IN S
+#define UPDATE_RATE 30                //UPDATE RATE IN HZ
+#define UPDATE_PERIOD 1/UPDATE_RATE   //UPDATE TIME IN S
 
 #define SERVO1_CMD_PIN 5
 #define SERVO1_FB_PIN  2
@@ -53,10 +55,14 @@ fb_servo servo2;
 
 ros::NodeHandle nh;
 
-std_msgs::Float64 tpv_pos_x;
-std_msgs::Float64 tpv_pos_y;
 std_msgs::Float64 vbus1;
 std_msgs::Float64 vbus2;
+
+sensor_msgs::JointState joint_states_msg;
+char *joint_name[2] = {"tpv_base_j", "tpv_tilt_j"};
+float joint_pos[2];
+float vel[2]; //not used
+float eff[2]; //not used
 
 ros::Subscriber<std_msgs::Float64> sub1("tpv_x", &messageServo1);
 ros::Subscriber<std_msgs::Float64> sub2("tpv_y", &messageServo2);
@@ -65,8 +71,7 @@ ros::Subscriber<std_msgs::UInt16> sub4("DOP2", &messageDop2);
 ros::Subscriber<std_msgs::UInt16> sub5("DOP3", &messageDop3);
 ros::Subscriber<std_msgs::UInt16> sub6("DOP4", &messageDop4);
 
-ros::Publisher pub1("tpv_pos_x", &tpv_pos_x);
-ros::Publisher pub2("tpv_pos_y", &tpv_pos_y);
+ros::Publisher pub1("joint_states", &joint_states_msg);
 ros::Publisher pub3("vbus1", &vbus1);
 ros::Publisher pub4("vbus2", &vbus2);
 
@@ -80,7 +85,7 @@ void setup()
   servo1.servo_handle.attach(SERVO1_CMD_PIN);
   servo2.servo_handle.attach(SERVO2_CMD_PIN);
 
-  nh.getHardware()->setBaud(57600);
+  nh.getHardware()->setBaud(115200);
   nh.initNode();
 
   nh.subscribe(sub1);
@@ -91,7 +96,6 @@ void setup()
   nh.subscribe(sub6);
 
   nh.advertise(pub1);
-  nh.advertise(pub2);
   nh.advertise(pub3);
   nh.advertise(pub4);
 
@@ -109,19 +113,31 @@ void setup()
   if(servo2.valid){
     servo2.cmd = servo1.pos;
   }
+
+  joint_states_msg.name_length = 2;
+  joint_states_msg.velocity_length = 2;
+  joint_states_msg.position_length = 2;
+  joint_states_msg.effort_length = 2;
+
+  joint_states_msg.name = joint_name;
+  joint_states_msg.effort = eff;
+  joint_states_msg.velocity = vel;
 }
 
 void loop()
 {
-    unsigned long timestamp = micros();
+    unsigned long timestamp = millis();
+    
+    joint_states_msg.header.stamp = nh.now();
+
     fb_servo_update(servo1);
     fb_servo_update(servo2);
-    
-    tpv_pos_x.data = servo2.pos;
-    pub1.publish(&tpv_pos_x);
-  
-    tpv_pos_y.data = servo1.pos;
-    pub1.publish(&tpv_pos_y);
+
+    joint_pos[0] = servo1.pos/180.0 * M_PI / 4.0;//TODO SET AS CONSTANTS, 4 IS REDUCTION RATIO
+    joint_pos[1] = servo2.pos/180.0 * M_PI;
+    joint_states_msg.position=joint_pos;
+
+    pub1.publish(&joint_states_msg);
 
     vbus1.data = analogRead(VBUS1_PIN) * VBUS_RATIO;
     pub3.publish(&vbus1);
@@ -130,8 +146,10 @@ void loop()
     pub4.publish(&vbus2);
 
     nh.spinOnce();
-    while(micros()-timestamp < UPDATE_PERIOD * 1000){
 
+    while(millis() - timestamp < 1000 * UPDATE_PERIOD){
+      delay(3);
+      nh.spinOnce();
     }
 }
 
