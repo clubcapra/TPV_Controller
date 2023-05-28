@@ -7,7 +7,7 @@
 #include <Servo.h>
 #include <math.h>
 
-#define UPDATE_RATE 30                //UPDATE RATE IN HZ
+#define UPDATE_RATE 5                //UPDATE RATE IN HZ
 #define UPDATE_PERIOD 1/UPDATE_RATE   //UPDATE TIME IN S
 
 #define SERVO1_CMD_PIN 5
@@ -88,7 +88,7 @@ void setup()
   servo1.servo_handle.attach(SERVO1_CMD_PIN);
   servo2.servo_handle.attach(SERVO2_CMD_PIN);
 
-  nh.getHardware()->setBaud(115200);
+  nh.getHardware()->setBaud(57600);
   nh.initNode();
 
   nh.subscribe(sub1);
@@ -125,6 +125,7 @@ void setup()
   joint_states_msg.name = joint_name;
   joint_states_msg.effort = eff;
   joint_states_msg.velocity = vel;
+  joint_states_msg.position= joint_pos;
 }
 
 void loop()
@@ -147,13 +148,8 @@ void loop()
 
     vbus2.data = analogRead(VBUS2_PIN)/1023.0* 5 * VBUS_RATIO;
     pub4.publish(&vbus2);
-
+    
     nh.spinOnce();
-
-    while(millis() - timestamp < 1000 * UPDATE_PERIOD){
-      delay(3);
-      nh.spinOnce();
-    }
 }
 
 void messageDop1(const std_msgs::UInt16& toggle_msg){
