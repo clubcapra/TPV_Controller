@@ -5,8 +5,8 @@
 #include <std_msgs/Float64.h>
 #include <Servo.h>
 
-#define UPDATE_RATE 15                //UPDATE RATE IN HZ
-#define UPDATE_PERIOD 1/UPDATE_RATE   //UPDATE RATE IN S
+#define UPDATE_RATE 15.0                //UPDATE RATE IN HZ
+#define UPDATE_PERIOD 1.0/UPDATE_RATE   //UPDATE RATE IN S
 
 #define SERVO1_CMD_PIN 5
 #define SERVO1_FB_PIN  2
@@ -141,7 +141,9 @@ void loop()
     pub4.publish(&vbus2);
 
     nh.spinOnce();
-    while(micros()-timestamp < UPDATE_PERIOD * 1000000){
+
+
+    while(micros()-timestamp < UPDATE_PERIOD * 1000000.0){
     }
 }
 
