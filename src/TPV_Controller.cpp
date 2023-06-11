@@ -126,10 +126,10 @@ void loop()
     fb_servo_update(&servo1);
     fb_servo_update(&servo2);
     
-    tpv_pos_x.data = servo1.pos - X_OFFSET;
+    tpv_pos_x.data = -(servo1.pos + X_OFFSET);
     pub1.publish(&tpv_pos_x);
   
-    tpv_pos_y.data = servo2.pos - Y_OFFSET;
+    tpv_pos_y.data = servo2.pos + Y_OFFSET;
     pub2.publish(&tpv_pos_y);
     
     Serial.println(servo1.tLow);
