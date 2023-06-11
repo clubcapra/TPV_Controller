@@ -5,7 +5,7 @@
 #include <std_msgs/Float64.h>
 #include <Servo.h>
 
-#define UPDATE_RATE 60                //UPDATE RATE IN HZ
+#define UPDATE_RATE 15                //UPDATE RATE IN HZ
 #define UPDATE_PERIOD 1/UPDATE_RATE   //UPDATE RATE IN S
 
 #define SERVO1_CMD_PIN 5
@@ -20,6 +20,10 @@
 #define DOP2_PIN  A3
 #define DOP3_PIN  A4
 #define DOP4_PIN  A5
+
+#define X_OFFSET -275
+#define Y_OFFSET -35
+
 
 #define VBUS_RATIO 6.23
 
@@ -102,7 +106,9 @@ void setup()
   attachInterrupt(digitalPinToInterrupt(SERVO2_FB_PIN), interupt2, CHANGE);
 
   delay(500);
- 
+  servo1.kp_gain = -70;
+  servo2.kp_gain = 25;
+
   fb_servo_calc_angle(&servo1);
   fb_servo_calc_angle(&servo2);
 
@@ -120,10 +126,10 @@ void loop()
     fb_servo_update(&servo1);
     fb_servo_update(&servo2);
     
-    tpv_pos_x.data = servo2.pos;
+    tpv_pos_x.data = servo1.pos - X_OFFSET;
     pub1.publish(&tpv_pos_x);
   
-    tpv_pos_y.data = servo1.pos;
+    tpv_pos_y.data = servo2.pos - Y_OFFSET;
     pub2.publish(&tpv_pos_y);
     
     Serial.println(servo1.tLow);
@@ -170,7 +176,7 @@ void fb_servo_update(fb_servo* fb_servo_handle){
     float error = (fb_servo_handle->cmd-fb_servo_handle->pos);
     fb_servo_handle->i = constrain(fb_servo_handle->i + error, -fb_servo_handle->i_max , fb_servo_handle->i_max);
     float servo_command = constrain((error*fb_servo_handle->kp_gain + fb_servo_handle->i*fb_servo_handle->ki_gain) + 90, 0 , 180);
-    fb_servo_handle->servo_handle.write(servo_command);
+    fb_servo_handle->servo_handle.write(fb_servo_handle->rate * fb_servo_handle->kp_gain + 90);
   }
   else{
     fb_servo_handle->servo_handle.write(90);
